@@ -5,7 +5,7 @@ module.exports = (function () {
   'use strict';
   var commonRoutes = require('express').Router();
 
-  commonRoutes.get('/',  scrapper);
+  commonRoutes.post('/',  scrapper);
 
   return commonRoutes;
 })();
