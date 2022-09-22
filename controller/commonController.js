@@ -7,7 +7,7 @@ const request_client = require('request-promise-native');
 
 
 const scrapper = (req, res) => {
-
+console.log("=>", req.query.charId);
 async function start() {
   const browser = await puppeteer.launch({
     headless: true,
@@ -37,7 +37,7 @@ async function start() {
   await page.waitForSelector('#cookieSwitchBtn');
   await page.$$eval('#cookieSwitchBtn', elHandles => elHandles.forEach(el => el.click()))
   await page.waitForSelector(`[placeholder="Please enter Player ID"]`)
-  await page.type('[placeholder="Please enter Player ID"]', req.body.charId);
+  await page.type('[placeholder="Please enter Player ID"]', req.query.charId);
   await page.click('div.btn');
    
 }
