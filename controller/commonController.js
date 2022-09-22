@@ -10,7 +10,7 @@ const scrapper = (req, res) => {
 console.log("=>", req.query.charId);
 async function start() {
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: false,
     args: ['--no-sandbox']
   });
   const page = await browser.newPage();
@@ -23,17 +23,25 @@ async function start() {
       }).then(response => {
           const request_url = request.url();
           const response_body = response.body;
-          if (request_url.includes('https://www.midasbuy.com/interface/getCharac')) {
-              res.end(response_body);
+          if (request.resourceType() === 'image') {
+            request.continue();
+           // request.abort();
+          } 
+           else if (request_url.includes('https://www.midasbuy.com/interface/getCharac')) {
+              res.end(response_body)
+                browser.close()
+
           }
-          request.continue();
+          else {
+            request.continue();
+          }
       }).catch(error => {
           request.abort();
       });
   });
 
 
-  await page.goto('https://www.midasbuy.com/midasbuy/gb/buy/pubgm');
+  await page.goto('https://www.midasbuy.com/midasbuy/gb/buy/pubgm',  { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#cookieSwitchBtn');
   await page.$$eval('#cookieSwitchBtn', elHandles => elHandles.forEach(el => el.click()))
   await page.waitForSelector(`[placeholder="Please enter Player ID"]`)
