@@ -2,7 +2,6 @@ const puppeteer = require ('puppeteer');
 const request_client = require ('request-promise-native');
 
 const scrapper = (req, res) => {
-<<<<<<< HEAD
 console.log("=>", req.query.charId);
 async function start() {
   const browser = await puppeteer.launch({
@@ -25,16 +24,6 @@ setTimeout(async () => {
     },8*60*1000)
 
 		await page.setRequestInterception(true);
-=======
-  console.log ('=>', req.query.charId);
-  async function start () {
-    const browser = await puppeteer.launch ({
-      headless: false,
-      args: ['--no-sandbox'],
-    });
-    const page = await browser.newPage ();
-    await page.setRequestInterception (true);
->>>>>>> 3a6e5ad6b359208c9f4dd7d8c3d3aa4e4b9f1078
 
     page.on ('request', request => {
       request_client ({
@@ -82,26 +71,12 @@ setTimeout(async () => {
       //   el.click() : console.log('el.no', JSON.stringify(el)) 
       //   );
 
-      await page.evaluate(`
-      document.getElementById('uc_landing_pop').remove()
-          `);
+      // await page.evaluate(`
+      // document.getElementById('uc_landing_pop').remove()
+      //     `);
       
 
 
-<<<<<<< HEAD
-  await page.goto('https://www.midasbuy.com/midasbuy/gb/buy/pubgm',  { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('#cookieSwitchBtn');
-  await page.evaluate(`
-      document.getElementById('uc_landing_pop').remove()
-          `);
-	await page.$$eval('#cookieSwitchBtn', elHandles => elHandles.forEach(el => el.click()))
-  await page.waitForSelector(`[placeholder="Please enter Player ID"]`)
-  await page.type('[placeholder="Please enter Player ID"]', req.query.charId);
-  
-    await page.keyboard.press('Enter');
-}
-try {
-=======
       console.log('running after clicked to close modal')
       // await page.waitForNavigation();
       
@@ -109,7 +84,6 @@ try {
       await page.$$eval('#cookieSwitchBtn', elHandles =>
         elHandles.forEach (el => console.log("element => ",el))
       );
->>>>>>> 3a6e5ad6b359208c9f4dd7d8c3d3aa4e4b9f1078
 
 
       // let cookies = await page.$$('div.btn.comfirm-btn', { visible: true });
