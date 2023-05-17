@@ -2,14 +2,22 @@ const puppeteer = require ('puppeteer');
 const request_client = require ('request-promise-native');
 
 const scrapper = (req, res) => {
-console.log("=>", req.query.charId);
-async function start() {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox'],
+  const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+  console.log(IS_PRODUCTION? 'Production ' : 'Dev ',"=>", req.query.charId);
 
-    
-  });
+const getBrowser = () =>
+  IS_PRODUCTION
+    ? // Connect to browserless so we don't run Chrome on the same hardware in production
+    puppeteer.connect({ browserWSEndpoint: `wss://chrome.browserless.io?token=${process.env.wsstoken}` })
+    : // Run the browser locally while in development
+    puppeteer.launch({
+      headless: false,
+      args: ['--no-sandbox'],
+    });
+
+async function start() {
+  let browser = null;
+  browser = await getBrowser();
   const page = await browser.newPage();
 
 setTimeout(async () => {
