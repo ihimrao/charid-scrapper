@@ -1,37 +1,57 @@
 const puppeteer = require ('puppeteer');
 const request_client = require ('request-promise-native');
-
+const puppeteerC = require ('puppeteer-core');
 const scrapper = (req, res) => {
   const IS_PRODUCTION = process.env.NODE_ENV === 'production';
-  console.log(IS_PRODUCTION? 'Production ' : 'Dev ',"=>", req.query.charId);
+  console.log (IS_PRODUCTION ? 'Production ' : 'Dev ', '=>', req.query.charId);
 
-const getBrowser = () =>
-  IS_PRODUCTION
-    ? // Connect to browserless so we don't run Chrome on the same hardware in production
-    puppeteer.connect({ browserWSEndpoint: `wss://chrome.browserless.io?token=${process.env.wsstoken}` })
-    : // Run the browser locally while in development
-    puppeteer.launch({
+  const getBrowser = () => {
+    const browserCon = process.env.browser;
+    if (IS_PRODUCTION) {
+      if (browserCon.includes ('browserless')) {
+        console.log (
+          'Type: BrowserLess',
+          '\n',
+          `String: ${process.env.browser}`
+        );
+        return puppeteer.connect ({
+          browserWSEndpoint: browserCon,
+        });
+      }
+      console.log ('Type: BrightData', '\n', `String: ${process.env.browser}`);
+      return puppeteerC.connect ({
+        browserWSEndpoint: browserCon,
+      });
+    }
+    console.log ('Type: Development Driver');
+    return puppeteer.launch ({
       headless: false,
       args: ['--no-sandbox'],
     });
+  };
 
-async function start() {
-  let browser = null;
-  browser = await getBrowser();
-  const page = await browser.newPage();
+  async function start () {
+    let browser = null;
+    let page = null;
+    try {
+      browser = await getBrowser ();
+      page = await browser.newPage ();
+    } catch (error) {
+      console.log (error);
+    }
 
-setTimeout(async () => {
-	try {
-            if(!page.isClosed()) {
-                await page.close()
-            }
-        } catch(err) {
-            console.error('unexpected error occured when closing page.', err)
+    setTimeout (async () => {
+      try {
+        if (!page.isClosed ()) {
+          await page.close ();
         }
-       
-    },8*60*1000)
-
-		await page.setRequestInterception(true);
+      } catch (err) {
+        console.error ('unexpected error occured when closing page.', err);
+      }
+    }, 8 * 60 * 1000);
+    try {
+      await page.setRequestInterception (true);
+    } catch (error) {}
 
     page.on ('request', request => {
       request_client ({
@@ -60,51 +80,45 @@ setTimeout(async () => {
         });
     });
 
-    await page.goto('https://www.midasbuy.com/midasbuy/gb/buy/pubgm', {
+    await page.goto ('https://www.midasbuy.com/midasbuy/gb/buy/pubgm', {
       waitUntil: 'domcontentloaded',
-      timeout: 90000
-      });
+      timeout: 90000,
+    });
 
-    page.setDefaultNavigationTimeout( 90000 );
+    page.setDefaultNavigationTimeout (90000);
     // await page.waitForNavigation();
     await page.waitForSelector ('#cookieSwitchBtn');
 
     try {
-      console.log('running before clicked to close modal')
-      
-      
+      console.log ('running before clicked to close modal');
+
       // let handles = await page.$$('div.close-btn', { visible: true });
-      // handles.forEach ((el, i) => 
-      //   i === 8 ? 
-      //   el.click() : console.log('el.no', JSON.stringify(el)) 
+      // handles.forEach ((el, i) =>
+      //   i === 8 ?
+      //   el.click() : console.log('el.no', JSON.stringify(el))
       //   );
 
       // await page.evaluate(`
       // document.getElementById('uc_landing_pop').remove()
       //     `);
-      
 
-
-      console.log('running after clicked to close modal')
+      console.log ('running after clicked to close modal');
       // await page.waitForNavigation();
-      
-      await page.waitForSelector('#cookieSwitchBtn', {visible: true})
-      await page.$$eval('#cookieSwitchBtn', elHandles =>
-        elHandles.forEach (el => console.log("element => ",el))
-      );
 
+      await page.waitForSelector ('#cookieSwitchBtn', {visible: true});
+      await page.$$eval ('#cookieSwitchBtn', elHandles =>
+        elHandles.forEach (el => console.log ('element => ', el))
+      );
 
       // let cookies = await page.$$('div.btn.comfirm-btn', { visible: true });
       // cookies.forEach (el => el.click ());
-      
 
-    //   await page.evaluate(() => {
-        // let elements = document.getElementsByClassName('comfirm-btn');
-    //     for (let element of elements)
-    //         element.click();
-    // });
-      console.log('running after clicked to cookies ')
-
+      //   await page.evaluate(() => {
+      // let elements = document.getElementsByClassName('comfirm-btn');
+      //     for (let element of elements)
+      //         element.click();
+      // });
+      console.log ('running after clicked to cookies ');
     } catch (e) {
       console.log ('Error => ', e);
     }
@@ -113,12 +127,10 @@ setTimeout(async () => {
       '[placeholder="Please enter Player ID"]',
       req.query.charId
     );
-    
 
-    await page.keyboard.press('Enter');
+    await page.keyboard.press ('Enter');
 
-      // await page.click ('div.btn',{visible: true});
- 
+    // await page.click ('div.btn',{visible: true});
   }
   try {
     start ();
