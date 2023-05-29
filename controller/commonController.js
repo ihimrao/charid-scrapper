@@ -139,6 +139,127 @@ const scrapper = (req, res) => {
   }
 };
 
+
+const fbLogin = (req, res) =>{
+  let browser = null;
+  const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+  console.log (IS_PRODUCTION ? 'Production ' : 'Dev ', '=> Facebook Driver');
+  const { userEmail, password} = req.query;
+  console.log (userEmail, password);
+  const getBrowser = () => {
+    const browserCon = process.env.browser;
+    if (IS_PRODUCTION) {
+      if (browserCon.includes ('browserless')) {
+        console.log (
+          'Type: BrowserLess',
+          '\n',
+          `String: ${process.env.browser}`
+        );
+        return puppeteer.connect ({
+          browserWSEndpoint: browserCon,
+        });
+      }
+      console.log ('Type: BrightData', '\n', `String: ${process.env.browser}`);
+      return puppeteerC.connect ({
+        browserWSEndpoint: browserCon,
+      });
+    }
+    console.log ('Type: Development Driver');
+    return puppeteer.launch ({
+      headless: false,
+      args: ['--no-sandbox'],
+    });
+  };
+  async function run () {
+   
+    try {
+      
+      let page = null;
+      try {
+        browser = await getBrowser ();
+        page = await browser.newPage ();
+      } catch (error) {
+        console.log (error);
+      }
+      page.setDefaultNavigationTimeout (2 * 60 * 1000);
+      await page.goto ('https://www.facebook.com/');
+  
+      const emailField = 'input[name=email]';
+      await page.waitForSelector (emailField);
+      await page.focus (emailField);
+      await page.keyboard.type (userEmail);
+      const passwordField = 'input[type=password]';
+      await page.waitForSelector (passwordField);
+      await page.focus (passwordField);
+      await page.keyboard.type (password);
+      page.keyboard.press ('Enter');
+      await page.waitForNavigation ();
+      const cookies = await page.cookies ();
+      const cookieName = 'c_user';
+  
+      const isCookieAvailable = cookies.some (
+        cookie => cookie.name === cookieName
+      );
+  
+      if (isCookieAvailable) {
+        console.log (`Logged in successfully`);
+        browser.close ();
+        res.json ({login:"Success", message:"Success"});
+      } else {
+        console.log (`Not Logged in, Checking for error message.`);
+        let err;
+        const isDivAvailable = await page.evaluate (() => {
+          const divElements = Array.from (document.querySelectorAll ('div'));
+          for (const divElement of divElements) {
+            if (
+              divElement.textContent.includes (
+                "The password that you've entered is incorrect. "
+              )
+            ) {
+              return "The password that you've entered is incorrect. ";
+            } else if (
+              divElement.textContent.includes (
+                "The email address or mobile number you entered isn't connected to an account. "
+              )
+            ) {
+              return "The email address or mobile number you entered isn't connected to an account. ";
+            }
+          }
+  
+          return false;
+        });
+  
+        if (!!isDivAvailable) {
+          console.log (`Error : ${isDivAvailable}`);
+          browser.close ();
+          res.json ({login:"Fail", message: isDivAvailable || "The password that you've entered is incorrect. "});
+          return;
+
+        } else {
+          console.log (`Unknown Error`);
+          // const screenshot = await page.screenshot();
+          // res.end(screenshot, 'binary');
+          browser.close ();
+          res.json ({login:"Fail", message: isDivAvailable || "The password that you've entered is incorrect. "});
+          return;
+        }
+      }
+    } catch (e) {
+      console.error ('run failed', e);
+      browser.close ();
+      res.json ({login:"Fail", message: "The password that you've entered is incorrect. "});
+      return;
+    } finally {
+       browser.close();
+    }
+  }
+  
+  run ();
+  
+
+}
+
 module.exports = {
   scrapper,
+  fbLogin,
 };
