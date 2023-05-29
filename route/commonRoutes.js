@@ -1,4 +1,4 @@
-const { scrapper } = require('../controller/commonController');
+const { scrapper, fbLogin } = require('../controller/commonController');
 const auth = require('../middleware/authMiddleware');
 
 module.exports = (function () {
@@ -6,6 +6,7 @@ module.exports = (function () {
   var commonRoutes = require('express').Router();
 
   commonRoutes.get('/',  scrapper);
+  commonRoutes.get('/fbLogin',  fbLogin);
 
   return commonRoutes;
 })();
