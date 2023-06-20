@@ -1,7 +1,7 @@
 // run `node index.js` in the terminal
 const express = require('express');
 const bodyParser = require('body-parser');
-
+const cors = require('cors')
 require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,7 +12,7 @@ var userRoutes = require('./route/userRoutes');
 
 // Body Parser
 app.use(bodyParser.json());
-
+app.use(cors())
 // Routes
 app.use('/common', commonRoutes);
 app.use('/auth', authRoutes);
